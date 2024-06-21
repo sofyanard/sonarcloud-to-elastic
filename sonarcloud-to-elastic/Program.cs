@@ -38,6 +38,14 @@
             ILogger logger = factory.CreateLogger("Program");
             logger.LogInformation("Hello World! Logging is {Description}.", "fun");
 
+            // logging
+            logger.LogTrace("Trace message");
+            logger.LogDebug("Debug message");
+            logger.LogInformation("Info message");
+            logger.LogWarning("Warning message");
+            logger.LogError("Error message");
+            logger.LogCritical("Critical message");
+
 
 
             // https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient
