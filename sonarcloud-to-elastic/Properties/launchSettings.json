@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "sonarcloud-to-elastic": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
