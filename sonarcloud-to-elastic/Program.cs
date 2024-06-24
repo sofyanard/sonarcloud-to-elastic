@@ -1,11 +1,12 @@
 ﻿namespace sonarcloud_to_elastic
 {
     using Microsoft.Extensions.Logging;
-    using static System.Runtime.InteropServices.JavaScript.JSType;
     using System.Text;
     using System;
     using System.Net.Http;
     using System.Net.Http.Headers;
+    using Newtonsoft.Json;
+    using System.Text.Json.Nodes;
 
     internal class Program
     {
@@ -86,11 +87,30 @@
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
 
-                Console.WriteLine(responseBody);
+                logger.LogInformation("responseBody:");
+                logger.LogInformation(responseBody);
+
+                // Parsing...
+
+                
+
+                // Post to Elastic
+                // var jsonPost = JsonConvert.SerializeObject(responseBody);
+                var dataPost = new StringContent(responseBody, Encoding.UTF8, "application/json");
+                var byteArray = Encoding.ASCII.GetBytes("elastic:JynEP9RYl792*khVwnTi");
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+                logger.LogInformation("posting start...");
+                using HttpResponseMessage response2 = await client.PostAsync("http://localhost:9200/books/_doc/", dataPost);
+                response2.EnsureSuccessStatusCode();
+                logger.LogInformation("posting success...");
+                string responseBody2 = await response2.Content.ReadAsStringAsync();
+
+                logger.LogInformation("responseBody2:");
+                logger.LogInformation(responseBody2);
             }
             catch (HttpRequestException e)
             {
-                logger.LogError("\nException Caught!");
+                logger.LogError("Exception Caught!");
                 logger.LogError("Message :{0} ", e.Message);
             }
 
