@@ -1,13 +1,14 @@
 ﻿namespace sonarcloud_to_elastic
 {
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Configuration;
     using System.Text;
     using System;
     using System.Net.Http;
     using System.Net.Http.Headers;
     using Newtonsoft.Json;
-    using System.Text.Json.Nodes;
     using Newtonsoft.Json.Linq;
+    
 
     internal class Program
     {
@@ -15,6 +16,19 @@
 
         static async Task Main(string[] args)
         {
+            // Build a config object, using env vars and JSON providers.
+            IConfigurationRoot config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables()
+                .Build();
+
+            // Access configuration settings
+            var setting1 = config["MySettings:Setting1"];
+            var setting2 = config["MySettings:Setting2"];
+
+            Console.WriteLine($"Setting1: {setting1}");
+            Console.WriteLine($"Setting2: {setting2}");
+
             /*
             // create a logger factory
             var loggerFactory = LoggerFactory.Create(
