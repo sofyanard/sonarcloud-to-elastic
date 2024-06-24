@@ -7,6 +7,7 @@
     using System.Net.Http.Headers;
     using Newtonsoft.Json;
     using System.Text.Json.Nodes;
+    using Newtonsoft.Json.Linq;
 
     internal class Program
     {
@@ -90,23 +91,27 @@
                 logger.LogInformation("responseBody:");
                 logger.LogInformation(responseBody);
 
-                // Parsing...
+                // Parsing Issues...
+                JObject jsonObject = JObject.Parse(responseBody);
+                JArray arrayOfIssue = (JArray)jsonObject["issues"];
+                logger.LogInformation($"Amount of Issues: {arrayOfIssue.Count}");
 
-                
+                foreach (var issue in arrayOfIssue)
+                {
+                    // Post Issue to Elastic
+                    var jsonPost = JsonConvert.SerializeObject(issue);
+                    var dataPost = new StringContent(jsonPost, Encoding.UTF8, "application/json");
+                    var byteArray = Encoding.ASCII.GetBytes("elastic:JynEP9RYl792*khVwnTi");
+                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+                    logger.LogInformation("posting start...");
+                    using HttpResponseMessage response2 = await client.PostAsync("http://localhost:9200/books/_doc/", dataPost);
+                    response2.EnsureSuccessStatusCode();
+                    logger.LogInformation("posting success...");
+                    string responseBody2 = await response2.Content.ReadAsStringAsync();
 
-                // Post to Elastic
-                // var jsonPost = JsonConvert.SerializeObject(responseBody);
-                var dataPost = new StringContent(responseBody, Encoding.UTF8, "application/json");
-                var byteArray = Encoding.ASCII.GetBytes("elastic:JynEP9RYl792*khVwnTi");
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
-                logger.LogInformation("posting start...");
-                using HttpResponseMessage response2 = await client.PostAsync("http://localhost:9200/books/_doc/", dataPost);
-                response2.EnsureSuccessStatusCode();
-                logger.LogInformation("posting success...");
-                string responseBody2 = await response2.Content.ReadAsStringAsync();
-
-                logger.LogInformation("responseBody2:");
-                logger.LogInformation(responseBody2);
+                    logger.LogInformation("responseBody2:");
+                    logger.LogInformation(responseBody2);
+                }
             }
             catch (HttpRequestException e)
             {
