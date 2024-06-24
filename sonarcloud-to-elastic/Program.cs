@@ -1,6 +1,11 @@
 ﻿namespace sonarcloud_to_elastic
 {
     using Microsoft.Extensions.Logging;
+    using static System.Runtime.InteropServices.JavaScript.JSType;
+    using System.Text;
+    using System;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
 
     internal class Program
     {
@@ -53,18 +58,40 @@
             // Call asynchronous network methods in a try/catch block to handle exceptions.
             try
             {
+                /*
                 using HttpResponseMessage response = await client.GetAsync("http://www.contoso.com/");
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
                 // Above three lines can be replaced with new helper method below
                 // string responseBody = await client.GetStringAsync(uri);
+                */
+
+                /* Basic Authentication
+                 * https://stackoverflow.com/questions/73493567/how-to-add-basic-authentication-to-http-request
+                 * https://code-maze.com/aspnetcore-basic-authentication-with-httpclient/
+                 *
+                using var client = new HttpClient();
+                var byteArray = Encoding.ASCII.GetBytes("username:password");
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+                var response = await client.PostAsync(url, data);
+                var result = await response.Content.ReadAsStringAsync();
+                 *
+                 */
+
+                /* Bearer Token 
+                 * https://code-maze.com/add-bearertoken-httpclient-request/
+                 */
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "b67886db23bc8a9d2f985ec98d0f45d1201936e3");
+                using HttpResponseMessage response = await client.GetAsync("https://sonarcloud.io/api/issues/search?componentKeys=rh-sakti_sakti-fuse-main&impactSoftwareQualities=SECURITY&impactSeverities=HIGH");
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
 
                 Console.WriteLine(responseBody);
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                logger.LogError("\nException Caught!");
+                logger.LogError("Message :{0} ", e.Message);
             }
 
             Console.WriteLine("Hello, World!");
