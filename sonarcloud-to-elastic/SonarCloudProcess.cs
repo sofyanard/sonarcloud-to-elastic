@@ -15,7 +15,7 @@ namespace sonarcloud_to_elastic
         static readonly HttpClient client = new HttpClient();
 
         static ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
-        static ILogger logger = factory.CreateLogger("Program");
+        static ILogger logger = factory.CreateLogger("SonarCloudProcess");
 
         static IConfigurationRoot config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
@@ -32,14 +32,14 @@ namespace sonarcloud_to_elastic
             Uri requestUri = new Uri(sonarUrl + "/issues/search?" + "componentKeys=" + sonarComponentKeys + "&impactSoftwareQualities=" + softwareQualities + "&impactSeverities=" + severities + "&ps=" + pageSize + "&p=" + page + "&_source=false");
             try
             {
-                logger.LogInformation("Requesting to SonarCloud API: {0}...", requestUri);
+                logger.LogInformation($"Requesting to SonarCloud API: {requestUri}...");
                 using HttpResponseMessage response = await client.GetAsync(requestUri);
                 response.EnsureSuccessStatusCode();
                 logger.LogInformation("Request is succeed, getting the response...");
                 string responseBody = await response.Content.ReadAsStringAsync();
                 string pattern = $@"^(.{{0,{100}}}).*";
                 string truncated = Regex.Replace(responseBody, pattern, "$1");
-                logger.LogInformation("Response: {0}...", truncated);
+                logger.LogInformation($"Response: {truncated}...");
 
                 return responseBody;
             }

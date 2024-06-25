@@ -101,6 +101,15 @@
                         int totalIssues = (int)jsonObject["total"];
                         logger.LogInformation($"Total Issues: {totalIssues}");
 
+                        // Loop for each issue
+                        if (arrayOfIssue.Count > 0)
+                        {
+                            foreach (var issue in arrayOfIssue)
+                            {
+                                string elasticResponse = await ElasticProcess.PostIssue(issue.ToString());
+                            }
+                        }
+
                         int remainingIssues = totalIssues;
                         while (remainingIssues > 500)
                         {
@@ -112,19 +121,12 @@
                     }
                 }
 
-                // string sonarResponse = await SonarCloudProcess.GetIssues("SECURITY","HIGH");
-
-                if (true)
-                {
-                    throw new Exception("Break!!!");
-                }
+                // if (true)
+                // {
+                //     throw new Exception("Break!!!");
+                // }
 
                 /*
-
-                // Parsing Issues...
-                JObject jsonObject = JObject.Parse(responseBody);
-                JArray arrayOfIssue = (JArray)jsonObject["issues"];
-                logger.LogInformation($"Amount of Issues: {arrayOfIssue.Count}");
 
                 foreach (var issue in arrayOfIssue)
                 {
@@ -148,7 +150,7 @@
             catch (HttpRequestException e)
             {
                 logger.LogError("Exception Caught!");
-                logger.LogError("Message :{0} ", e.Message);
+                logger.LogError($"Message :{e.Message} ", e.Message);
             }
 
             Console.WriteLine("Hello, World!");
@@ -156,16 +158,16 @@
 
         enum SoftwareQuality
         {
-            SECURITY,
+            SECURITY/*,
             RELIABILITY,
-            MAINTAINABILITY
+            MAINTAINABILITY*/
         }
 
         enum Severity
         {
-            HIGH,
+            HIGH/*,
             MEDIUM,
-            LOW
+            LOW*/
         }
     }
 }
