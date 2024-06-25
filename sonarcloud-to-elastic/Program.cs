@@ -23,11 +23,12 @@
                 .Build();
 
             // Access configuration settings
-            var setting1 = config["MySettings:Setting1"];
-            var setting2 = config["MySettings:Setting2"];
+            var sonarComponentKeys = config["SonarCloud:ComponentKeys"];
+            Console.WriteLine($"sonarComponentKeys: {sonarComponentKeys}");
 
-            Console.WriteLine($"Setting1: {setting1}");
-            Console.WriteLine($"Setting2: {setting2}");
+            // From Environment Variables
+            string sonarCloudToken = Environment.GetEnvironmentVariable("SONARCLOUD_TOKEN");
+            Console.WriteLine($"sonarCloudToken: {sonarCloudToken}");
 
             /*
             // create a logger factory
@@ -97,6 +98,7 @@
                 /* Bearer Token 
                  * https://code-maze.com/add-bearertoken-httpclient-request/
                  */
+                /*
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "b67886db23bc8a9d2f985ec98d0f45d1201936e3");
                 using HttpResponseMessage response = await client.GetAsync("https://sonarcloud.io/api/issues/search?componentKeys=rh-sakti_sakti-fuse-main&impactSoftwareQualities=SECURITY&impactSeverities=HIGH");
                 response.EnsureSuccessStatusCode();
@@ -104,6 +106,15 @@
 
                 logger.LogInformation("responseBody:");
                 logger.LogInformation(responseBody);
+                */
+                string sorarResponse = await SonarCloudProcess.GetIssues("SECURITY","HIGH");
+
+                if (true)
+                {
+                    throw new Exception("Break!!!");
+                }
+
+                /*
 
                 // Parsing Issues...
                 JObject jsonObject = JObject.Parse(responseBody);
@@ -126,6 +137,8 @@
                     logger.LogInformation("responseBody2:");
                     logger.LogInformation(responseBody2);
                 }
+
+                */
             }
             catch (HttpRequestException e)
             {
