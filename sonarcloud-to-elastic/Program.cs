@@ -30,31 +30,7 @@
             string sonarCloudToken = Environment.GetEnvironmentVariable("SONARCLOUD_TOKEN");
             Console.WriteLine($"sonarCloudToken: {sonarCloudToken}");
 
-            /*
-            // create a logger factory
-            var loggerFactory = LoggerFactory.Create(
-                    builder => builder
-                            // add console as logging target
-                            .AddConsole()
-                            // add debug output as logging target
-                            .AddDebug()
-                            // set minimum level to log
-                            .SetMinimumLevel(LogLevel.Debug)
-            );
-
-            // create a logger
-            var logger = loggerFactory.CreateLogger<Program>();
-
-            // logging
-            logger.LogTrace("Trace message");
-            logger.LogDebug("Debug message");
-            logger.LogInformation("Info message");
-            logger.LogWarning("Warning message");
-            logger.LogError("Error message");
-            logger.LogCritical("Critical message");
-            */
-
-            // https://learn.microsoft.com/en-us/dotnet/core/extensions/logging
+            
 
             using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
             ILogger logger = factory.CreateLogger("Program");
@@ -107,7 +83,36 @@
                 logger.LogInformation("responseBody:");
                 logger.LogInformation(responseBody);
                 */
-                string sorarResponse = await SonarCloudProcess.GetIssues("SECURITY","HIGH");
+
+                foreach (SoftwareQuality softwareQuality in Enum.GetValues(typeof(SoftwareQuality)))
+                {
+                    foreach (Severity severity in Enum.GetValues(typeof(Severity)))
+                    {
+                        string strQ = softwareQuality.ToString();
+                        string strS = severity.ToString();
+
+                        int iPage = 1;
+                        logger.LogInformation($"Software Quality: {softwareQuality}, Severity: {severity}, Page: {iPage}");
+                        string sonarResponse = await SonarCloudProcess.GetIssues(strQ, strS, 500, iPage);
+
+                        // Parsing Sonar Response...
+                        JObject jsonObject = JObject.Parse(sonarResponse);
+                        JArray arrayOfIssue = (JArray)jsonObject["issues"];
+                        int totalIssues = (int)jsonObject["total"];
+                        logger.LogInformation($"Total Issues: {totalIssues}");
+
+                        int remainingIssues = totalIssues;
+                        while (remainingIssues > 500)
+                        {
+                            remainingIssues -= 500;
+                            iPage++;
+                            logger.LogInformation($"Software Quality: {softwareQuality}, Severity: {severity}, Page: {iPage}");
+                            sonarResponse = await SonarCloudProcess.GetIssues(strQ, strS, 500, iPage);
+                        }
+                    }
+                }
+
+                // string sonarResponse = await SonarCloudProcess.GetIssues("SECURITY","HIGH");
 
                 if (true)
                 {
@@ -147,6 +152,20 @@
             }
 
             Console.WriteLine("Hello, World!");
+        }
+
+        enum SoftwareQuality
+        {
+            SECURITY,
+            RELIABILITY,
+            MAINTAINABILITY
+        }
+
+        enum Severity
+        {
+            HIGH,
+            MEDIUM,
+            LOW
         }
     }
 }
