@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace sonarcloud_to_elastic
 {
@@ -30,11 +31,11 @@ namespace sonarcloud_to_elastic
         public static async Task<string> PostIssue(string issue)
         {
             string pattern = $@"^(.{{0,{100}}}).*";
-            string msgIssue = Regex.Replace(issue, pattern, "$1");
+            string msgIssue = Regex.Replace(JsonConvert.SerializeObject(issue), pattern, "$1");
             logger.LogInformation($"Data to post: {msgIssue}...");
 
-            var jsonPost = JsonConvert.SerializeObject(issue);
-            var dataPost = new StringContent(jsonPost, Encoding.UTF8, "application/json");
+            // var jsonPost = JsonConvert.SerializeObject(issue);
+            var dataPost = new StringContent(issue, Encoding.UTF8, "application/json");
             var byteArray = Encoding.ASCII.GetBytes($"{elasticUser}:{elasticPassword}");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
             Uri requestUri = new Uri($"{elasticUrl}/{elasticIndex}/_doc/");
