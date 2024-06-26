@@ -47,29 +47,60 @@
                         int totalIssues = (int)jsonObject["total"];
                         logger.LogInformation($"Total Issues: {totalIssues}");
 
-                        // Loop for each issue
-                        if (arrayOfIssue.Count > 0)
+                        // Here split 2 conditions,
+                        // if totalIssues >= 10000, break to specific rule issues,
+                        // else, continue to get all issues
+                        if (totalIssues >= 10000)
                         {
-                            foreach (var issue in arrayOfIssue)
+                            List<Facet> listFacet = await SonarCloudProcess.GetFacets(strQ, strS);
+                            foreach (Facet facet in listFacet)
                             {
-                                string elasticResponse = await ElasticProcess.PostIssue(issue.ToString());
+                                iPage = 1;
+                                logger.LogInformation($"Software Quality: {softwareQuality}, Severity: {severity}, Rule: {facet.Val}, Page: {iPage}");
+                                sonarResponse = await SonarCloudProcess.GetSpecificRuleIssues(strQ, strS, facet.Val, 500, iPage);
+
+                                // Parsing Sonar Response...
+                                jsonObject = JObject.Parse(sonarResponse);
+                                arrayOfIssue = (JArray)jsonObject["issues"];
+                                totalIssues = (int)jsonObject["total"];
+                                logger.LogInformation($"Total Issues: {totalIssues}");
+
+                                // Loop for each issue
+                                if (arrayOfIssue.Count > 0)
+                                {
+                                    foreach (var issue in arrayOfIssue)
+                                    {
+                                        string elasticResponse = await ElasticProcess.PostIssue(issue.ToString());
+                                    }
+                                }
+
+                                int remainingIssues = totalIssues;
+                                while (remainingIssues > 500)
+                                {
+                                    remainingIssues -= 500;
+                                    iPage++;
+                                    logger.LogInformation($"Software Quality: {softwareQuality}, Severity: {severity}, Rule: {facet.Val}, Page: {iPage}");
+                                    sonarResponse = await SonarCloudProcess.GetSpecificRuleIssues(strQ, strS, facet.Val, 500, iPage);
+
+                                    // Parsing Sonar Response...
+                                    jsonObject = JObject.Parse(sonarResponse);
+                                    arrayOfIssue = (JArray)jsonObject["issues"];
+                                    totalIssues = (int)jsonObject["total"];
+                                    logger.LogInformation($"Total Issues: {totalIssues}");
+
+                                    // Loop for each issue
+                                    if (arrayOfIssue.Count > 0)
+                                    {
+                                        foreach (var issue in arrayOfIssue)
+                                        {
+                                            string elasticResponse = await ElasticProcess.PostIssue(issue.ToString());
+                                        }
+                                    }
+                                }
                             }
                         }
-
-                        int remainingIssues = totalIssues;
-                        while (remainingIssues > 500)
+                        else
                         {
-                            remainingIssues -= 500;
-                            iPage++;
-                            logger.LogInformation($"Software Quality: {softwareQuality}, Severity: {severity}, Page: {iPage}");
-                            sonarResponse = await SonarCloudProcess.GetIssues(strQ, strS, 500, iPage);
-
-                            // Parsing Sonar Response...
-                            jsonObject = JObject.Parse(sonarResponse);
-                            arrayOfIssue = (JArray)jsonObject["issues"];
-                            totalIssues = (int)jsonObject["total"];
-                            logger.LogInformation($"Total Issues: {totalIssues}");
-
                             // Loop for each issue
                             if (arrayOfIssue.Count > 0)
                             {
@@ -78,14 +109,38 @@
                                     string elasticResponse = await ElasticProcess.PostIssue(issue.ToString());
                                 }
                             }
+
+                            int remainingIssues = totalIssues;
+                            while (remainingIssues > 500)
+                            {
+                                remainingIssues -= 500;
+                                iPage++;
+                                logger.LogInformation($"Software Quality: {softwareQuality}, Severity: {severity}, Page: {iPage}");
+                                sonarResponse = await SonarCloudProcess.GetIssues(strQ, strS, 500, iPage);
+
+                                // Parsing Sonar Response...
+                                jsonObject = JObject.Parse(sonarResponse);
+                                arrayOfIssue = (JArray)jsonObject["issues"];
+                                totalIssues = (int)jsonObject["total"];
+                                logger.LogInformation($"Total Issues: {totalIssues}");
+
+                                // Loop for each issue
+                                if (arrayOfIssue.Count > 0)
+                                {
+                                    foreach (var issue in arrayOfIssue)
+                                    {
+                                        string elasticResponse = await ElasticProcess.PostIssue(issue.ToString());
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-            catch (HttpRequestException e)
+            catch (Exception e)
             {
                 logger.LogError("Exception Caught!");
-                logger.LogError($"Message :{e.Message} ", e.Message);
+                logger.LogError($"Message: {e.Message} ", e);
             }
 
             Console.WriteLine("Hello, World!");
