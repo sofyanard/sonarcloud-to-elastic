@@ -8,7 +8,9 @@
     using System.Net.Http.Headers;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
-    
+    using Serilog;
+    using Serilog.Extensions.Logging;
+    using Serilog.Sinks.Elasticsearch;
 
     internal class Program
     {
@@ -16,8 +18,32 @@
 
         static async Task Main(string[] args)
         {
-            using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
-            ILogger logger = factory.CreateLogger("Program");
+            IConfigurationRoot config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables()
+                .Build();
+
+            string elasticPassword = Environment.GetEnvironmentVariable("ELASTIC_TOKEN");
+            string elasticUrl = config["Elastic:Url"];
+            string elasticUser = config["Elastic:User"];
+            string elasticIndex = config["Elastic:Index"];
+
+            // Set up Serilog
+            Serilog.Log.Logger = new LoggerConfiguration()
+                .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUrl))
+                {
+                    IndexFormat = "sonarcloud-to-elastic",
+                    ModifyConnectionSettings = conn =>
+                        conn.BasicAuthentication(elasticUser, elasticPassword)
+                })
+                .CreateLogger();
+
+            using ILoggerFactory factory = LoggerFactory.Create(builder =>
+            {
+                builder.AddSerilog();
+                builder.AddConsole();
+            });
+            Microsoft.Extensions.Logging.ILogger logger = factory.CreateLogger("Program");
             logger.LogInformation("Hello World! Logging is {Description}.", "fun");
 
             // logging
@@ -143,6 +169,7 @@
                 logger.LogError($"Message: {e.Message} ", e);
             }
 
+            Serilog.Log.CloseAndFlush();
             Console.WriteLine("Hello, World!");
         }
 
